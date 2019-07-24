@@ -2,11 +2,9 @@
  * @Description: 播放音频
  * @Author: your name
  * @Date: 2019-07-15 12:02:36
- * @LastEditTime: 2019-07-24 15:22:31
+ * @LastEditTime: 2019-07-24 15:46:05
  * @LastEditors: Please set LastEditors
  */
-
-
 
 #include <node.h>
 #include <v8.h>
@@ -16,6 +14,9 @@ using namespace v8;
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+
+#include <unistd.h>
+#include <fcntl.h>
 
 namespace sound {
 
@@ -55,7 +56,17 @@ namespace sound {
         String::Utf8Value utfValue(Local<String>::Cast(args[0]));
         std::string fileName = std::string(*utfValue);
 
-        system_shell(fileName.c_str());
+        char temp[128];
+        if(0 == access("/usr/bin/aplay", X_OK)) {
+            sprintf(temp, "/usr/bin/aplay %s &", fileName.c_str());
+        } else if(0 == access("/usr/bin/play", X_OK)) {
+            sprintf(temp, "/usr/bin/play %s &", fileName.c_str());
+        } else if(0 == access("/usr/bin/mplayer", X_OK)) {
+            sprintf(temp, "/usr/bin/mplayer %s &", fileName.c_str());
+        } else {
+            return;
+        }
+        system_shell(temp);
     }
 
 
