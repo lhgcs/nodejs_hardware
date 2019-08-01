@@ -18,7 +18,10 @@ using namespace v8;
 #include <unistd.h>
 #include <fcntl.h>
 
-namespace sound {
+#include <string.h>
+#include <stdlib.h>
+
+namespace cpu {
 
     /**
      * @description: 执行shell命令并返回结果
@@ -131,21 +134,20 @@ namespace sound {
         HandleScope scope(isolate);
 
         char data[256];
+        char *data2 = NULL;
         memset(data, 0, sizeof(data));
 
         if(read_file("/sys/firmware/devicetree/base/serial-number", data, sizeof(data)) > 0) {  
-            data = strtrim(data);
+            data2 = strtrim(data);
             if(strlen(data) <= 0) {
-                memcpy(data, "000000");
+                memcpy(data2, "000000", 7);
             }
         } else {
-            memcpy(data, "000000");
+            memcpy(data2, "000000", 7);
         }
 
-        std::string str = data;
-
         // 设置返回值
-        args.GetReturnValue().Set(String::NewFromUtf8(isolate, str, NewStringType::kNormal).ToLocalChecked());
+        args.GetReturnValue().Set(String::NewFromUtf8(isolate, data2));
     }
 
 
@@ -161,16 +163,17 @@ namespace sound {
 
         int temp = 0;
         char data[256];
+        char *data2 = NULL;
         memset(data, 0, sizeof(data));
 
         if(read_file("/sys/devices/virtual/thermal/thermal_zone0/temp", data, sizeof(data)) > 0
         || read_file("/sys/class/thermal/thermal_zone0/temp", data, sizeof(data)) <= 0) {  
-            data = strtrim(data);
-            int index = strlen(data) - 3;
+            data2 = strtrim((char *)data);
+            int index = strlen(data2) - 3;
             for(int i=0; i < index; i++) {
-                if(data[i] >= '0' && data[i] <= '9') {
-                    temp = temp * 10 + (data[i] - '0');
-                } elae {
+                if(data2[i] >= '0' && data2[i] <= '9') {
+                    temp = temp * 10 + (data2[i] - '0');
+                } else {
                     temp = 0;
                     break;
                 }
@@ -178,7 +181,7 @@ namespace sound {
         }
 
         // 设置返回值
-        args.GetReturnValue().Set(Number::New(isolate, value));
+        args.GetReturnValue().Set(Number::New(isolate, temp));
     }
 
 
@@ -188,7 +191,8 @@ namespace sound {
      * @return: 
      */
     void Initialize(Local<Object> exports) {
-        NODE_SET_METHOD(exports, "play", play);
+        NODE_SET_METHOD(exports, "get_cpu_id", get_cpu_id);
+        NODE_SET_METHOD(exports, "get_cpu_temp", get_cpu_temp);
     }
 
     /**
