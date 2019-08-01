@@ -19,9 +19,9 @@
 //升级包
 var UPDATE_PACK_NAME = "update.tar.gz"
 //升级包MD5
-var UPDATE_PACK_MD5_FILE_NAME = "update.md5"
+var UPDATE_PACK_MD5_FILE_NAME = "update.tar.gz.md5"
 //升级脚本
-var UPDATE_CMD = "update.sh"
+var UPDATE_CMD = "unpack.sh update"
 
 var request = require('request');
 var fs = require('fs');
@@ -193,22 +193,22 @@ function download_finish(fileName) {
     console.log(fileName + '下载完毕');
     //解压
     unzipFile(fileName, function(dirPath) {
-        //MD5校验文件
-        check_md5(dirPath+"/"+UPDATE_PACK_NAME, function(md5Str) {
-            //原始MD5
-            var md5Value = get_md5_from_file(dirPath+"/"+UPDATE_PACK_MD5_FILE_NAME);
-            if (null != md5Valuea && md5Value === md5Str) {
-                var cmd = dirPath+"/"+UPDATE_CMD;
-                fs.exists(cmd, function(exists) {
-                    if(exists) {
-                        exec_shell(cmd);
-                    }
-                });
-            } else {
+		if(fs.existsSync(dirPath+"/"+UPDATE_PACK_NAME) && fs.existsSync(dirPath+"/"+UPDATE_PACK_MD5_FILE_NAME)) {
+			//MD5校验文件
+			check_md5(dirPath+"/"+UPDATE_PACK_NAME, function(md5Str) {
+				//原始MD5
+				var md5Value = get_md5_from_file(dirPath+"/"+UPDATE_PACK_MD5_FILE_NAME);
+				if (null != md5Valuea && md5Value === md5Str) {
+					var cmd = dirPath+"/"+UPDATE_CMD;
+					
+					if(fs.existsSync(cmd)) {
+						exec_shell(cmd +" update");
+					}
+				} else {
 
-            }
-        });
-
+				}
+			});
+		}
     });
 }
 

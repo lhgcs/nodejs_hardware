@@ -73,7 +73,7 @@ cp ./temp/* ${tar_dir} -a
 tar -zcf ${UPDATE_PACK_NAME} ${tar_dir} --remove-files
 
 # md5
-gennerate_md5 ${current_dir}/${UPDATE_PACK_NAME}
+gennerate_md5 ${UPDATE_PACK_NAME}
 
 # 打包zip
 create_dir ${zip_dir}

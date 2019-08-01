@@ -11,7 +11,7 @@
 # 升级包
 UPDATE_PACK_NAME="update.tar.gz"
 # 升级包MD5
-UPDATE_PACK_MD5_FILE_NAME="update.md5"
+UPDATE_PACK_MD5_FILE_NAME="update.tar.gz.md5"
 
 # 备份文件名称
 BACKUP_NAME="backup.tar"
@@ -113,6 +113,9 @@ function check() {
     update_pack="$1/${UPDATE_PACK_NAME}"
     update_pack_md5_file="$1/${UPDATE_PACK_MD5_FILE_NAME}"
     
+    echo ${update_pack}
+    echo ${update_pack_md5_file}
+    
     if [ -f ${update_pack} ]; then
         if [ -f ${update_pack_md5_file} ]; then
             check_md5 ${update_pack_md5_file}
@@ -134,8 +137,8 @@ function check() {
 function do_something() {
 
     # 文件存放目录
-    do_path="$1/UNPACK_PACK_NAME"
-
+    do_path="$1/${UNPACK_PACK_NAME}"
+    echo ${do_path}
     cp -a ${do_path}/1.txt ${TARGET_PATH}/
 }
 
@@ -149,11 +152,15 @@ function update() {
     # 校验MD5
     check $1
     if [ $? == 0 ]; then
+        echo "md5 ok"
         # 解压
         tar -zxf "$1/${UPDATE_PACK_NAME}"
         if [ $? == 0 ]; then
-            do_something
+            echo "tar ok"
+            do_something $1
         fi
+    else
+        echo "md5 failed"
     fi
 }
 
@@ -175,7 +182,7 @@ recovery)
 esac
 
 # 删除
-clear_dir ${current_dir}
+# clear_dir ${current_dir}
 # 重启
 #shutdown -r now
 
