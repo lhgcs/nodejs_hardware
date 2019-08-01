@@ -1,0 +1,17 @@
+安装
+npm init && npm install
+npm audit fix && npm audit
+
+npm install request
+npm install unzip
+npm install request
+
+npm install jimp
+npm install qrcode-reader
+
+sudo npm -g install node-gyp
+sudo rm -rf /usr/bin/node-gyp
+sudo ln -s /usr/local/nodejs/lib/node_modules/node-gyp/bin/node-gyp.js /usr/bin/node-gyp
+
+编译
+node-gyp configure && node-gyp build 

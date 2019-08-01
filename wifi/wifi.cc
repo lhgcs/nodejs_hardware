@@ -2,7 +2,7 @@
  * @Description: wifi
  * @Author: your name
  * @Date: 2019-07-15 11:36:22
- * @LastEditTime: 2019-07-24 15:06:38
+ * @LastEditTime: 2019-08-01 10:57:20
  * @LastEditors: Please set LastEditors
  */
 
@@ -47,6 +47,7 @@ namespace wifi {
         return ret == 0 ? 0 : -1;
     }
 
+
     /**
      * @description: 执行shell命令并返回结果（创建一个连接到另一个进程（shell的命令行）的管道，然后读其输出或向其输入端发送数据）
      * @param {type} 
@@ -60,6 +61,8 @@ namespace wifi {
         if(NULL == cmdString || NULL == outString) {
             return -1;
         }
+        
+        printf("cmd: %s\n", cmdString);
 
         fp = popen(cmdString, "r");
         if (NULL == fp) {
@@ -68,11 +71,113 @@ namespace wifi {
         }
 
         while (fgets(outString, outStringSize, fp) != NULL) {
-            printf("%s", outString);
+            // printf("%s", outString);
         }
         pclose(fp);
+        printf("recv: %s\n", outString);
 
         return 0;
+    }
+
+
+    /**
+     * @description: 读文件
+     * @param {type} 
+     * @return: 
+     */
+    int read_file(const char *fileName, char *data, int dataSize) {
+        int ret = -1;
+        int fd = open(fileName, O_RDONLY);
+        if(fd > 0) {
+            ret =read(fd, data, dataSize);
+            close(fd);
+        } else {
+            printf("can not open %s\n", fileName);
+        }
+        return ret;
+    }
+
+
+    /**
+     * @description: 写文件
+     * @param {type} 
+     * @return: 
+     */
+    int write_file(const char *fileName, const char *data, int dataSize) {
+        int ret = -1;
+        int fd = open(fileName, O_WRONLY);
+        if(fd > 0) {
+            ret =write(fd, data, dataSize);
+            close(fd);
+        } else {
+            printf("can not open %s\n", fileName);
+        }
+        return ret;
+    }
+
+    /**
+     * @description: 去除左边空格
+     * @param {type} 
+     * @return: 
+     */
+    char *strltrim(char *s) {
+        char *p = s;
+
+        if (NULL == *p) {
+            return NULL;
+        }
+
+        while(*p != '\0') {
+            if ((*p == ' ') || (*p == '\t') || (*p == '\r') || (*p == '\n')) {
+                p++;
+            } else {
+                break;
+            }
+        }
+        return p;
+    }
+
+	
+    /**
+     * @description: 去除右边空格
+     * @param {type} 
+     * @return: 
+     */
+    char *strrtrim(char *s) {
+        char *p = s;
+
+        if (NULL == *p) {
+            return NULL;
+        }
+        //找到最右边的字符
+        while(*p != '\0') {
+            p++;
+        }
+        p--;
+
+        while(p >= s) {
+            if ((*p == ' ') || (*p == '\t') || (*p == '\r') || (*p == '\n')) {
+                *p = '\0';
+                if(p > s) {
+                    p--;
+                }
+            } else {
+                break;
+            }
+        }
+        return s;
+    }
+	
+
+    /**
+     * @description: 去除两边空格
+     * @param {type} 
+     * @return: 
+     */
+    char *strtrim(char *s) {
+        char *p = strltrim(s);
+        char *q = strrtrim(p);
+        return q;
     }
 
   
@@ -82,7 +187,7 @@ namespace wifi {
      * @return: 
      */
     int isConnectByIfconfig() {
-        char cmdString[50] = "ifconfig wlan0 | awk 'NR==2 {print $2} ";
+        char cmdString[128] = "ifconfig wlan0 | awk 'NR==2 {print $2}'";
         char outString[256];
 
         if (0 == popen_shell(cmdString, outString, sizeof(outString))) {
@@ -101,12 +206,16 @@ namespace wifi {
      * @return: 
      */
     int isConnectByNmcli() {
-        char cmdString[50] = "nmcli device status | awk 'NR==2 {print $3}";
+        char cmdString[128] = "nmcli device status | awk 'NR==2 {print $3}'";
         char outString[256];
+        char *temp = NULL;
 
         if (0 == popen_shell(cmdString, outString, sizeof(outString))) {
-            if (NULL != outString && 0 == strcmp(outString, "connected")) {
-            return 0;
+            if (NULL != outString) {
+				temp = strtrim(outString);
+				if (0 == strcmp(temp, "connected")) {
+				 return 0;
+			 }
             }
         }
 
@@ -120,20 +229,22 @@ namespace wifi {
      * @return: 
      */
     int get_status() {
-        char cmdString[50] = "nmcli device status | awk 'NR==2 {print $3}";
+        char cmdString[128] = "nmcli device status | awk 'NR==2 {print $3}'";
         char outString[256];
+        char *temp = NULL;
 
         if (0 == popen_shell(cmdString, outString, sizeof(outString))) {
-            if (NULL != outString && 0 != strcmp(outString, "")) {
-                if(0 == strcmp(outString, "connected")) {
+            if (NULL != outString) {
+				temp = strtrim(outString);
+                if(0 == strcmp(temp, "connected")) {
                     return 0;
-                } else if(0 == strcmp(outString, "disconnected")) {
+                } else if(0 == strcmp(temp, "disconnected")) {
                     return 1;
-                } else if(0 == strcmp(outString, "connecting")) {
+                } else if(0 == strcmp(temp, "connecting")) {
                     return 2;
-                } else if(0 == strcmp(outString, "unavailable")) {//不可用
+                } else if(0 == strcmp(temp, "unavailable")) {//不可用
                     return 3;
-                } else if(0 == strcmp(outString, "unmanaged")) {//未托管
+                } else if(0 == strcmp(temp, "unmanaged")) {//未托管
                     return 4;
                 }
             }
@@ -144,17 +255,65 @@ namespace wifi {
   
 
     /**
+     * @description: 获取记录行数
+     * @param {type} 
+     * @return: 
+     */
+    int get_row(const char *cmdStr) {
+        char cmdString[128];
+        char outString[256];
+        char *temp = NULL;
+        int row = 0;
+
+        sprintf(cmdString, "%s | wc -l", cmdStr);
+
+        if (0 == popen_shell(cmdString, outString, sizeof(outString))) {
+            if (NULL != outString) {
+                temp = strtrim(outString);
+                while(*temp != '\0') {
+                    if(*temp >= '0' && *temp <='9') {
+                        row = row * 10 + (*temp - '0');
+                    } else {
+                        break;
+                    }
+                    temp++;
+                }
+            }
+        }
+        return row;
+    }
+
+
+    /**
      * @description: 是否检测到wifi
      * @param {type} 
      * @return: 
      */
     int is_wifi_exists(const char *wifiName) {
-        char cmdString[50] = "nmcli device wifi";
+        char cmdString[50];
         char outString[256];
+        char *temp = NULL;
 
-        if (0 == popen_shell(cmdString, outString, sizeof(outString))) {
-            if (NULL != outString && 0 == strcmp(outString, wifiName)) {
-                return 0;
+		int num = get_row("nmcli device wifi");
+		if(num <= 0) {
+			return -1;
+		}
+
+		for(int i=1; i<=num; i++) {
+			memset(cmdString, 0, sizeof(cmdString));
+			sprintf(cmdString, "nmcli device wifi | awk 'NR==%d {print $1}'", i);
+			
+			if (0 == popen_shell(cmdString, outString, sizeof(outString))) {
+				if (NULL != outString) {
+					printf("%s\n", outString);
+					temp = strtrim(outString);
+	
+					printf("id %d: %s\n", i, temp);
+					if (0 == strcmp(temp, wifiName)) {
+						return 0;
+					}
+				}
+				
             }
         }
         
@@ -168,7 +327,7 @@ namespace wifi {
      * @return: 
      */
     int is_wifi_use(const char *wifiName) {
-        char cmdString[128] = "nmcli device status | awk \'NR==2 {for (i=4;i<=NF;i++)printf(\"%s \", $i);print \"\"}\'";//第4列到最后一列的内容
+        char cmdString[128] = "nmcli device status | awk 'NR==2 {for(i=4;i<=NF;i++)printf(\"%s \", $i);print "";}'";//第4列到最后一列的内容
         char outString[256];
 
         if (0 == popen_shell(cmdString, outString, sizeof(outString))) {
@@ -270,73 +429,105 @@ namespace wifi {
      */
     int connect2wifi(const char *ssid, const char *passwd) {
         int ret = get_status();
+        printf("status:%d\n", ret);
         switch (ret) {
             case 0:return 0;
             case 1:
             case 3:
             {
-                wifi_on_or_off(1);break;//开启
+                //wifi_on_or_off(1);break;//开启
 
                 //是否检测到该wifi
                 if(0 != is_wifi_exists(ssid)){
+					printf("%s wifi not exist\n", ssid);
                     return -1;
                 }
-
+                printf("%s wifi exist\n", ssid);
+                
                 //当前是否持有这个wifi
                 if(0 == is_wifi_use(ssid)){
+					printf("wifi reconnect\n");
                     wifi_reconnect(ssid);
-                } else {
-                    wifi_connect(ssid, passwd);
+                    
+                    int cnt = 10;
+					while(--cnt > 0) {
+						if(0 == isConnectByNmcli()){
+							return 0;
+						}
+					}
                 }
+				
+				printf("wifi connect\n");
+                wifi_connect(ssid, passwd);
             }
             break;
 
-            case 2: break;
+            case 2: break;//ing
             default: return -1;
         }
 
-        //是否已连接wifi
-        if(0 == isConnectByNmcli()){
-            return 0;
-        } else {
-            return -1;
-        }
+		int cnt = 10;
+		while(--cnt > 0) {
+			if(0 == isConnectByNmcli()){
+				return 0;
+			}
+		}
+        return -1;
     }
 
 
     /**
-     * @description: 读文件
+     * @description: 清空WIFI连接记录
      * @param {type} 
      * @return: 
      */
-    int read_file(const char *fileName, char *data, int dataSize) {
-        int ret = -1;
-        int fd = open(fileName, O_RDONLY);
-        if(fd > 0) {
-            ret =read(fd, data, dataSize);
-            close(fd);
-        } else {
-            printf("can not open %s\n", fileName);
+    int clear_all_wifi() {
+        char cmdString[128];
+        char outString[256];
+        char *temp = NULL;
+
+		int num = get_row("nmcli con");
+		if(num <= 0) {
+			return -1;
+		}
+		
+        // 断开WIFI
+		wifi_disconnect();
+		
+		for(int i=1; i<num; i++) {
+			memset(cmdString, 0, sizeof(cmdString));
+			strcpy(cmdString, "nmcli con | awk 'NR==2 {print $1}'");
+			//strcpy(cmdString, "nmcli con | sed -n '2p' | awk -F"  " '{print $1}'");
+			
+			if (0 == popen_shell(cmdString, outString, sizeof(outString))) {
+				if (NULL != outString) {
+					printf("%s\n", outString);
+					temp = strtrim(outString);
+					
+                    sprintf(cmdString, "nmcli con del %s", temp);
+                    popen_shell(cmdString, outString, sizeof(outString));
+				}
+            }
         }
-        return ret;
+        
+        return 0;
     }
 
 
     /**
-     * @description: 写文件
+     * @description: 清空WIFI连接记录
      * @param {type} 
      * @return: 
      */
-    int write_file(const char *fileName, const char *data, int dataSize) {
-        int ret = -1;
-        int fd = open(fileName, O_WRONLY);
-        if(fd > 0) {
-            ret =write(fd, data, dataSize);
-            close(fd);
-        } else {
-            printf("can not open %s\n", fileName);
-        }
-        return ret;
+    void clearAllWifi(const FunctionCallbackInfo<Value>& args) {
+        //一个独立的V8执行环境
+        Isolate* isolate = args.GetIsolate();
+        HandleScope scope(isolate);
+
+        int ret = clear_all_wifi();
+
+        // 设置返回值
+        args.GetReturnValue().Set(Number::New(isolate, ret));
     }
 
 
@@ -350,7 +541,8 @@ namespace wifi {
         Isolate* isolate = args.GetIsolate();
         HandleScope scope(isolate);
 
-        int ret = isConnectByIfconfig();
+        //int ret = isConnectByIfconfig();
+        int ret = isConnectByNmcli();
 
         // 设置返回值
         args.GetReturnValue().Set(Number::New(isolate, ret));
@@ -392,7 +584,7 @@ namespace wifi {
             char data[128];
             memset(data, 0, sizeof(data));
             sprintf(data, "{\"ssid\":\"%s\",\"passwd\":\"%s\"}", ssid.c_str(), passwd.c_str());
-            write_file("", data, strlen(data));
+            //write_file("", data, strlen(data));
         }
 
         // 声明
@@ -410,6 +602,7 @@ namespace wifi {
     void Initialize(Local<Object> exports) {
         NODE_SET_METHOD(exports, "isConnect", isConnect);
         NODE_SET_METHOD(exports, "connect2wifi", connect2wifi);
+        NODE_SET_METHOD(exports, "clearAllWifi", clearAllWifi);
     }
 
 

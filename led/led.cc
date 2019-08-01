@@ -2,7 +2,7 @@
  * @Description: led
  * @Author: your name
  * @Date: 2019-07-15 12:02:36
- * @LastEditTime: 2019-07-18 17:59:18
+ * @LastEditTime: 2019-08-01 10:44:31
  * @LastEditors: Please set LastEditors
  */
 
@@ -24,19 +24,6 @@ using namespace v8;
 #include <string>
 
 namespace led {
-
-    /**
-     * @description: 方法
-     * @param {type} 
-     * @return: 
-     */
-    void Method(const FunctionCallbackInfo<Value>& args) {
-        //一个独立的V8执行环境
-        Isolate* isolate = args.GetIsolate();
-        //HandleScope scope(isolate);
-        //设置返回值
-        args.GetReturnValue().Set(String::NewFromUtf8(isolate, "world", NewStringType::kNormal).ToLocalChecked());
-    }
 
     /**
      * @description: 控制led亮灭
@@ -83,7 +70,7 @@ namespace led {
         memset(level, 0, sizeof(level));
 
         if(0 == device.compare("wifi")) {
-            strcpy(deviceName, (char *)"/sys/class/leds/led-wifi/trigger");
+            strcpy(deviceName, "/sys/class/leds/led-wifi/trigger");
         }else if(0 == device.compare("usr1")) {
             strcpy(deviceName, "/sys/class/leds/led-usr1/trigger");
         }else if(0 == device.compare("usr2")) {
@@ -93,11 +80,12 @@ namespace led {
         }
 
         switch(value) {
-            case 0: strcpy(level, "none");       break;
-            case 1: strcpy(level, "default-on"); break;
-            default: strcpy(level, "heartbeat"); break;
+            case 0: strcpy(level, "none");       break;//灭
+            case 1: strcpy(level, "default-on"); break;//亮
+            default: strcpy(level, "heartbeat"); break;//闪烁
         }
         
+        int ret = 0;
         int fd = open(deviceName, O_WRONLY);
         if(fd > 0) {
             printf("open %s\n", deviceName);
@@ -106,13 +94,15 @@ namespace led {
             close(fd);
         } else {
             printf("can not open %s\n", deviceName);
+            ret = -1;
         }
 
         // 声明
-        // Local<Number> num = Number::New(isolate, value);
+        Local<Number> num = Number::New(isolate, ret);
         // 设置返回值
-        // args.GetReturnValue().Set(num);
+        args.GetReturnValue().Set(num);
     }
+
 
     /**
      * @description: 初始化函数(名字随便起)
@@ -122,10 +112,9 @@ namespace led {
     //void init(Handle<Object> exports) {
     void Initialize(Local<Object> exports) {
         //导出方法 NODE_SET_METHOD(exports, Method_Name, Method)
-        //把hello和Method这个方法挂钩
-        NODE_SET_METHOD(exports, "helloo", Method);
-        NODE_SET_METHOD(exports, "led_on_or_off", led_on_or_off);
+        NODE_SET_METHOD(exports, "led_on_or_off", led_on_or_off)
     }
+
 
     /**
      * @description: 导出初始化函数
@@ -136,48 +125,3 @@ namespace led {
     NODE_MODULE(NODE_GYP_MODULE_NAME, Initialize)
 
 }  // namespace demo
-
-
-
- //typeof args[1] != "function"
-        // // callback, 使用Cast方法来转换    //转换成C++认识的函数
-
-        // Local<Function> callback = Local<Function>::Cast(args[1]);
-        // Local<Value> argv[1] = {
-        //     // 拼接String
-        //     String::Concat(Local<String>::Cast(args[0]), String::NewFromUtf8(isolate, " world"))
-        // };
-        // // 调用回调, 参数: 当前上下文，参数个数，参数列表
-        // callback->Call(isolate->GetCurrentContext()->Global(), 1, argv);
-
-
-//动态曝光，白平衡，帧率最高10 500万
-
-/*
-# 安装nodejs
-sudo apt-get install -y nodejs
-# 安装n模块
-sudo npm install -g n
-# 升级
-n stable
-
-rm -rf node_modules
-npm install
-# 更新模块
-npm update
-npm cache clear
-npm rebuild
-
-# 重新构建 node-pty 模块
-npm rebuild node-pty --update-binary
-npm rebuild bcrypt --build-from-source
-
-# 编译
-node-gyp rebuild
-node-gyp configure
-node-gyp build
-
-yarn add node-sass
-
- */
-
