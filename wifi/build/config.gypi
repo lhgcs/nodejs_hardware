@@ -5,8 +5,7 @@
     "default_configuration": "Release",
     "defines": [],
     "include_dirs": [],
-    "libraries": [],
-    "msvs_configuration_platform": "ARM64"
+    "libraries": []
   },
   "variables": {
     "asan": 0,
@@ -18,7 +17,7 @@
     "enable_pgo_use": "false",
     "force_dynamic_crt": 0,
     "gas_version": "2.27",
-    "host_arch": "arm64",
+    "host_arch": "x64",
     "icu_data_in": "../../deps/icu-small/source/data/in/icudt64l.dat",
     "icu_endianness": "l",
     "icu_gyp_path": "tools/icu/icu-generic.gyp",
@@ -58,7 +57,7 @@
     "openssl_fips": "",
     "openssl_no_asm": 0,
     "shlib_suffix": "so.64",
-    "target_arch": "arm64",
+    "target_arch": "x64",
     "v8_enable_gdbjit": 0,
     "v8_enable_i18n_support": 1,
     "v8_enable_inspector": 1,
@@ -70,7 +69,7 @@
     "v8_typed_array_max_size_in_heap": 0,
     "v8_use_snapshot": "true",
     "want_separate_host_toolset": 0,
-    "nodedir": "/home/rock/.cache/node-gyp/10.16.0",
+    "nodedir": "/home/ubuntu/.cache/node-gyp/10.16.0",
     "standalone_static_library": 1
   }
 }

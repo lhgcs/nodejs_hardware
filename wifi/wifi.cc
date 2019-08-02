@@ -2,7 +2,7 @@
  * @Description: wifi
  * @Author: your name
  * @Date: 2019-07-15 11:36:22
- * @LastEditTime: 2019-08-01 10:57:20
+ * @LastEditTime: 2019-08-02 10:41:03
  * @LastEditors: Please set LastEditors
  */
 
@@ -123,7 +123,7 @@ namespace wifi {
     char *strltrim(char *s) {
         char *p = s;
 
-        if (NULL == *p) {
+        if (NULL == p) {
             return NULL;
         }
 
@@ -146,7 +146,7 @@ namespace wifi {
     char *strrtrim(char *s) {
         char *p = s;
 
-        if (NULL == *p) {
+        if (NULL == p) {
             return NULL;
         }
         //找到最右边的字符
@@ -573,10 +573,10 @@ namespace wifi {
             return;
         }
 
-        String::Utf8Value temp1(Local<String>::Cast(args[0]));
+        String::Utf8Value temp1(isolate, Local<String>::Cast(args[0]));
         std::string ssid = std::string(*temp1);
 
-        String::Utf8Value temp2(Local<String>::Cast(args[1]));
+        String::Utf8Value temp2(isolate, Local<String>::Cast(args[1]));
         std::string passwd = std::string(*temp2);
 
         int value = connect2wifi(ssid.c_str(), passwd.c_str());
